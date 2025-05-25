@@ -1,6 +1,5 @@
 package com.mwv.products
 
-import android.R
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.mwv.products.ui.theme.ProductsTheme
-
 import com.mwv.products.ui.theme.ComposeSqlliteTheme
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.*
@@ -25,18 +23,15 @@ import android.widget.Toast
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import android.database.Cursor
-import androidx.compose.foundation.background
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.graphics.Color // Import Color for link styling
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.style.TextAlign
 import java.net.URLEncoder // For robust URL encoding
 
 class MainActivity : ComponentActivity() {
@@ -58,28 +53,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             ComposeSqlliteTheme {
                 Scaffold(
-                        modifier = Modifier
-                                   .fillMaxSize()
-                                   .safeDrawingPadding(), // Aplica padding para evitar superposición con barras del sistema
-                        topBar = {
-                                   // Tu TopAppBar
-                        },
-                        bottomBar = {
-                                  // Tu BottomNavigationBar
-                        },
-                        content = { paddingValues ->
-                                 SQLiteApp()
-
-                                 Text(
-                                       "Products's price",
-                                       modifier = Modifier
-                                                  .fillMaxSize()
-                                                  .padding(paddingValues) // Aplica el padding del Scaffold
-                                 )
-                        }
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .safeDrawingPadding(),
+                    topBar = { /* Your TopAppBar */ },
+                    bottomBar = { /* Your BottomNavigationBar */ },
+                    content = { paddingValues ->
+                        // Apply paddingValues to the *root* of your content.
+                        // SQLiteApp() will now fill the space *within* these paddings.
+                        SQLiteApp(modifier = Modifier.padding(paddingValues)) // Pass padding to SQLiteApp
+                    }
                 )
             }
         }
+
     }
 }
 
@@ -101,7 +88,7 @@ fun GreetingPreview() {
 
 
 @Composable
-fun SQLiteApp() {
+fun SQLiteApp(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val databaseHelper = remember { DatabaseHelper(context) }
     var product by remember { mutableStateOf("") }
@@ -113,11 +100,19 @@ fun SQLiteApp() {
     var id by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier.fillMaxSize() // <--- Apply the modifier here
+        //modifier = Modifier
+        //    .fillMaxSize()
+        //    .padding(16.dp),
+        //horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(
+            "Products's price",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+
         TextField(
             value = product,
             onValueChange = { product = it },
@@ -205,17 +200,30 @@ fun SQLiteApp() {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround // Distributes buttons evenly
         ) {
+            Text(
+                text = "Delete by:",
+                //modifier = Modifier.padding(bottom = 8.dp) // Add bottom padding for spacing
+                modifier = Modifier.padding(end = 1.dp) // Add bottom padding for spacing
+                    .padding(top = 10.dp)
+            )
+
             Button(onClick = {
-                if(product.isNotEmpty()){
-                    loadDataByProduct(databaseHelper, product) { newData ->
-                        dataList = newData
+                if(id.isNotEmpty()){
+                    val rowId = databaseHelper.deleteDataById(id.toInt())
+                    if (rowId > 0) {
+                        Toast.makeText(context, "Data deleted successfully", Toast.LENGTH_SHORT).show()
+                        id = ""
+                        loadData(databaseHelper) { newData ->
+                            dataList = newData
+                        }
+                    } else {
+                        Toast.makeText(context, "Failed to delete data", Toast.LENGTH_SHORT).show()
                     }
-                    product = ""
                 } else {
-                    Toast.makeText(context, "Please enter product name", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Please enter id", Toast.LENGTH_SHORT).show()
                 }
             }) {
-                Text("SearchByProduct")
+                Text("Id")
             }
 
             Button(onClick = {
@@ -230,10 +238,11 @@ fun SQLiteApp() {
                     } else {
                         Toast.makeText(context, "Failed to delete data", Toast.LENGTH_SHORT).show()
                     }
-
+                } else {
+                    Toast.makeText(context, "Please enter product", Toast.LENGTH_SHORT).show()
                 }
             }) {
-            Text("DeleteByProduct")
+                Text("Product")
             }
         }
 
@@ -241,8 +250,16 @@ fun SQLiteApp() {
 
         Row(
             modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically, // Vertically centers all items in this row
             horizontalArrangement = Arrangement.SpaceAround // Distributes buttons evenly
         ) {
+            Text(
+                text = "Search by:",
+                //modifier = Modifier.padding(bottom = 8.dp) // Add bottom padding for spacing
+                modifier = Modifier.padding(end = 0.dp) // Add bottom padding for spacing
+                                   .padding(top = 10.dp)
+            )
+
             Button(onClick = {
                 if (product.isNotEmpty()) {
                     loadDataByPortionProduct(databaseHelper, product) { newData ->
@@ -252,8 +269,12 @@ fun SQLiteApp() {
                 } else {
                     Toast.makeText(context, "Please enter portion product name", Toast.LENGTH_SHORT).show()
                 }
-            }) {
-                Text("SearchLikeProduct")
+            }
+            ) {
+                Text("LikeProduct",
+                    //modifier = Modifier.fillMaxWidth(), // Make the text fill the button's width
+                    textAlign = TextAlign.Center // Center the text within that filled width
+                    )
             }
             Spacer(modifier = Modifier.height(2.dp))
             Button(onClick = {
@@ -266,9 +287,24 @@ fun SQLiteApp() {
                 } else{
                     Toast.makeText(context, "Please enter Id", Toast.LENGTH_SHORT).show()
                 }
-            }) {
-                Text("SearchById")
             }
+            ) {
+                Text("Id")
+            }
+
+            Button(onClick = {
+                if(product.isNotEmpty()){
+                    loadDataByProduct(databaseHelper, product) { newData ->
+                        dataList = newData
+                    }
+                    product = ""
+                } else {
+                    Toast.makeText(context, "Please enter product name", Toast.LENGTH_SHORT).show()
+                }
+            }) {
+                Text("Product")
+            }
+
         }
 
         Spacer(modifier = Modifier.height(4.dp))
