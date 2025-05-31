@@ -186,6 +186,46 @@ fun SQLiteApp(modifier: Modifier = Modifier) {
                 Text("Add Data")
             }
             Spacer(modifier = Modifier.height(2.dp))
+
+            Button(onClick = {
+                if (id.isNotEmpty()) {
+                    val valueNewProduct: String? = if(product.isEmpty()) null else product
+                    val valueNewDescription: String? = if(description.isEmpty()) null else description
+                    val valueNewPrice: Float? = if(price.isEmpty()) null else price.toFloat()
+                    val valueNewAddress: String? = if(address.isEmpty()) null else address
+
+                    if(valueNewProduct != null || valueNewDescription != null || valueNewPrice != null || valueNewAddress != null){
+                        val rowsUpdated = databaseHelper.updateProduct(
+                            id = id.toInt(),
+                            newProduct = valueNewProduct,
+                            newDescription = valueNewDescription,
+                            newPrice = valueNewPrice,
+                            newAddress = valueNewAddress
+                        )
+
+                        if (rowsUpdated > 0) {
+                            Toast.makeText(context, "Update successful for ID: $id. Rows affected: $rowsUpdated", Toast.LENGTH_SHORT).show()
+                            product = ""
+                            description = ""
+                            price = ""
+                            address = ""
+                        } else {
+                            Toast.makeText(context,"Update failed or no changes for ID: $id.", Toast.LENGTH_SHORT).show()
+                        }
+
+                    }
+                    else{
+                        Toast.makeText(context, "Please enter product, description, price or address", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(context, "Please enter id", Toast.LENGTH_SHORT).show()
+                }
+            }) {
+                Text("updateData")
+            }
+
+            Spacer(modifier = Modifier.height(2.dp))
+
             Button(onClick = {
                 loadData(databaseHelper) { newData ->
                     dataList = newData

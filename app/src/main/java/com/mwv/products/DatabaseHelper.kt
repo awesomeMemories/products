@@ -112,6 +112,37 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         )
     }
 
+    /**
+     * Updates the product name and/or description for a given product ID.
+     *
+     * @param id The ID of the product to update.
+     * @param newProduct The new product name (can be null if not updating product name).
+     * @param newDescription The new description (can be null if not updating description).
+     * @param newPrice The new price (can be null if not updating price).
+     * @param newAddress The new price (can be null if not updating price).
+     * @return The number of rows affected by the update.
+     */
+    fun updateProduct(id: Int, newProduct: String? = null, newDescription: String? = null, newPrice: Float? = null, newAddress: String? = null): Int {
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            newProduct?.let { put(COLUMN_PRODUCT, it) }
+            newDescription?.let { put(COLUMN_DESCRIPTION, it) }
+            newPrice?.let { put(COLUMN_PRICE, it) }
+            newAddress?.let { put(COLUMN_ADDRESS, it) }
+        }
+
+        if (values.size() == 0) {
+            db.close()
+            return 0 // No values to update
+        }
+
+        val whereClause = "$COLUMN_ID = ?"
+        val whereArgs = arrayOf(id.toString())
+        val rowsAffected = db.update(TABLE_NAME, values, whereClause, whereArgs)
+        db.close()
+        return rowsAffected
+    }
+
     override fun close() {
         super.close()
         writableDatabase.close()
