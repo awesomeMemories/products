@@ -33,6 +33,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.style.TextAlign
 import java.net.URLEncoder // For robust URL encoding
+import androidx.compose.foundation.rememberScrollState // Import for rememberScrollState
+import androidx.compose.foundation.verticalScroll // Import for verticalScroll
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,19 +100,27 @@ fun SQLiteApp(modifier: Modifier = Modifier) {
     var showAddressDetails by remember { mutableStateOf(false) }
     var dataList by remember { mutableStateOf(listOf<UserData>()) }
     var id by remember { mutableStateOf("") }
+    // Create a scroll state to manage the scroll position
+    val scrollState = rememberScrollState()
 
     Column(
-        modifier = modifier.fillMaxSize() // <--- Apply the modifier here
+        //modifier = modifier.fillMaxSize() // <--- Apply the modifier here
         //modifier = Modifier
         //    .fillMaxSize()
         //    .padding(16.dp),
         //horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp) // Apply padding to the entire scrollable content
+            .verticalScroll(scrollState), // <--- Apply verticalScroll here
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             "Products's price",
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
+                //.padding(horizontal = 0.dp, vertical = 8.dp) // Adjusted padding
         )
 
         TextField(
